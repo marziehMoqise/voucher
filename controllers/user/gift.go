@@ -51,7 +51,7 @@ func Gift(ctx *fiber.Ctx) error {
 			db = db.Begin()
 
 			//insertTransaction
-			if err = transaction.Insert(user.ID, voucher.GiftAmount, "decrease"); err != nil {
+			if err = transaction.Insert(user.ID, voucher.GiftAmount, "decrease", "افزایش موجودی کیف پول از طریق هدیه"); err != nil {
 				db.Rollback()
 				return response.ResponseError(ctx, "operation failed(20152)")
 			}
