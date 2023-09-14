@@ -23,5 +23,5 @@ func GetByUserID(userID int64) (transactions []transactionSchema.ListResponse, e
 	db := database.GetConnection()
 	err = db.Model(transactionDataModel.Transaction{}).Find(&transactions, "userID = ?", userID).Error
 
-	return transactions, nil
+	return transactions, err
 }
