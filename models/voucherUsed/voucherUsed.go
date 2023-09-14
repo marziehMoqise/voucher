@@ -5,6 +5,7 @@ import (
 	"apiGolang/database"
 	voucherUsedDataModel "apiGolang/models/voucherUsed/dataModel"
 	"gorm.io/gorm"
+	"time"
 )
 
 func GetVoucherUsedByUserID(voucherID, userID int64) (result *gorm.DB, err error) {
@@ -20,7 +21,7 @@ func Insert(userID, voucherID int64) error {
 	voucherUsed := voucherUsedDataModel.VoucherUsed{
 		VoucherID: voucherID,
 		UserID:    userID,
-		//Time: time.Now(),
+		Time:      time.Now().Unix(),
 	}
 	return db.Create(&voucherUsed).Error
 }

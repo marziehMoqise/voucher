@@ -20,7 +20,7 @@ func UpdateUserBalance(userID, amount int64) error {
 
 func GetByMobile(mobile string) (user dataModel.User, err error) {
 	db := database.GetConnection()
-	err = db.Take(&user, "mobile = ? ", mobile).Error;
+	err = db.Take(&user, "mobile = ? ", mobile).Error
 
 	return user, err
 }

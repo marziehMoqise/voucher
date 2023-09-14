@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	app:=fiber.New()
+	app := fiber.New()
 	app.Use(logger.New())
 
 	app.Post("/user/gift", user.Gift)
@@ -17,6 +17,6 @@ func main() {
 	app.Post("/vouchersUsed", voucherUsed.List)
 
 	if err := app.Listen(":7575"); err != nil {
-		//panic(err)
+		panic(err)
 	}
 }

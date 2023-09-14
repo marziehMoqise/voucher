@@ -12,7 +12,7 @@ func setConnectionClient() {
 	var err error
 	URI := os.Getenv("MYSQL")
 	if URI == "" {
-		//panic("MYSQL not found")
+		panic("MYSQL not found")
 	}
 	//zap.L().Info("MYSQL url at env ", zap.Any("url:", URI))
 	USER := os.Getenv("MYSQL_USER")
@@ -20,7 +20,7 @@ func setConnectionClient() {
 	DB := os.Getenv("MYSQL_DB")
 	if USER == "" || PASSWORD == "" || DB == "" {
 		//zap.L().Error("MYSQL param required")
-		//panic("some MySQL param (MYSQL_USER-MYSQL_PASSWORD-MYSQL_DB) are missed")
+		panic("some MySQL param (MYSQL_USER-MYSQL_PASSWORD-MYSQL_DB) are missed")
 	}
 
 	dsn := USER + ":" + PASSWORD + "@tcp(" + URI + ")/" + DB + "?charset=utf8mb4&parseTime=true&loc=Local"
@@ -30,11 +30,11 @@ func setConnectionClient() {
 	})
 	if err != nil {
 		//zap.L().Error("MYSQL connection error", zap.Error(err))
-		//panic(err)
+		panic(err)
 	}
 	_, err = connection.DB()
 	if err != nil {
-		//panic(err)
+		panic(err)
 	}
 }
 

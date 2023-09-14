@@ -8,6 +8,7 @@ import (
 	voucherModel "apiGolang/models/voucher"
 	"apiGolang/models/voucherUsed"
 	response "apiGolang/services"
+	"errors"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 	"strconv"
@@ -28,8 +29,8 @@ func Gift(ctx *fiber.Ctx) error {
 
 	//getVoucherByCode
 	voucher, err := voucherModel.GetVoucherByCode(req.VoucherCode, "gift")
-	if  err != nil {
-		if err == gorm.ErrRecordNotFound {
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return response.ResponseError(ctx, "voucherCode not found")
 		}
 		return response.ResponseError(ctx, "operation failed(20151)")
@@ -47,7 +48,7 @@ func Gift(ctx *fiber.Ctx) error {
 	}
 
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			db = db.Begin()
 
 			//insertTransaction
@@ -80,7 +81,7 @@ func Gift(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
 		"data": fiber.Map{
-			"message":  strings.NewReplacer("{GiftAmount}", strconv.FormatInt(voucher.GiftAmount, 10)).Replace("The amount of {GiftAmount} was added to your wallet"),
+			"message": strings.NewReplacer("{GiftAmount}", strconv.FormatInt(voucher.GiftAmount, 10)).Replace("The amount of {GiftAmount} was added to your wallet"),
 		},
 	})
 }
