@@ -79,10 +79,10 @@ func Gift(ctx *fiber.Ctx) error {
 				return response.ResponseError(ctx, "operation failed(20155)")
 			}
 			db.Commit()
+		} else {
+			log.Error("Get voucher used by userID", zap.Error(err))
+			return response.ResponseError(ctx, "operation failed(20156)")
 		}
-
-		log.Error("Get voucher used by userID", zap.Error(err))
-		return response.ResponseError(ctx, "operation failed(20156)")
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
