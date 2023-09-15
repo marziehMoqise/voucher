@@ -10,6 +10,8 @@ import (
 	response "apiGolang/services"
 	"errors"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
@@ -24,6 +26,7 @@ func Gift(ctx *fiber.Ctx) error {
 
 	user, err := userModel.FirstOrCreateUserByMobile(req.Mobile)
 	if err != nil {
+		log.Error("FirstOrCreate user by mobile", zap.Error(err))
 		return response.ResponseError(ctx, "operation failed(20150)")
 	}
 
@@ -33,6 +36,7 @@ func Gift(ctx *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return response.ResponseError(ctx, "voucherCode not found")
 		}
+		log.Error("Get voucher by code", zap.Error(err))
 		return response.ResponseError(ctx, "operation failed(20151)")
 	}
 
@@ -76,6 +80,9 @@ func Gift(ctx *fiber.Ctx) error {
 			}
 			db.Commit()
 		}
+
+		log.Error("Get voucher used by userID", zap.Error(err))
+		return response.ResponseError(ctx, "operation failed(20156)")
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
