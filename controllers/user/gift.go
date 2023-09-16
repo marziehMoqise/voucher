@@ -7,7 +7,7 @@ import (
 	userModel "apiGolang/models/user"
 	voucherModel "apiGolang/models/voucher"
 	"apiGolang/models/voucherUsed"
-	response "apiGolang/services"
+	"apiGolang/utils"
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -24,31 +24,36 @@ func Gift(ctx *fiber.Ctx) error {
 	req := new(userSchema.GiftRequest)
 	ctx.BodyParser(req)
 
+	errCode, err := req.Validate(ctx)
+	if err != nil {
+		return utils.ResponseError(ctx, errCode)
+	}
+
 	user, err := userModel.FirstOrCreateUserByMobile(req.Mobile)
 	if err != nil {
 		log.Error("FirstOrCreate user by mobile", zap.Error(err))
-		return response.ResponseError(ctx, "operation failed(20150)")
+		return utils.ResponseError(ctx, "operation failed(20150)")
 	}
 
 	//getVoucherByCode
 	voucher, err := voucherModel.GetVoucherByCode(req.VoucherCode, "gift")
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return response.ResponseError(ctx, "voucherCode not found")
+			return utils.ResponseError(ctx, "voucherCode not found")
 		}
 		log.Error("Get voucher by code", zap.Error(err))
-		return response.ResponseError(ctx, "operation failed(20151)")
+		return utils.ResponseError(ctx, "operation failed(20151)")
 	}
 
 	//usedVoucherByUser
 	result, err := voucherUsed.GetVoucherUsedByUserID(voucher.ID, user.ID)
 	if result.RowsAffected > 0 {
-		return response.ResponseError(ctx, "You have already used this voucher code")
+		return utils.ResponseError(ctx, "You have already used this voucher code")
 	}
 
 	//check voucherCode exceeded
 	if voucher.UsedCount == voucher.Reusability {
-		return response.ResponseError(ctx, "voucherCode has been exceeded")
+		return utils.ResponseError(ctx, "voucherCode has been exceeded")
 	}
 
 	if err != nil {
@@ -58,30 +63,30 @@ func Gift(ctx *fiber.Ctx) error {
 			//insertTransaction
 			if err = transaction.Insert(user.ID, voucher.GiftAmount, "increase", "افزایش موجودی کیف پول از طریق هدیه"); err != nil {
 				db.Rollback()
-				return response.ResponseError(ctx, "operation failed(20152)")
+				return utils.ResponseError(ctx, "operation failed(20152)")
 			}
 
 			//updateUserBalance
 			if err = userModel.UpdateUserBalance(user.ID, voucher.GiftAmount); err != nil {
 				db.Rollback()
-				return response.ResponseError(ctx, "operation failed(20153)")
+				return utils.ResponseError(ctx, "operation failed(20153)")
 			}
 
 			//insert voucherUsed
 			if err = voucherUsed.Insert(user.ID, voucher.ID); err != nil {
 				db.Rollback()
-				return response.ResponseError(ctx, "operation failed(20154)")
+				return utils.ResponseError(ctx, "operation failed(20154)")
 			}
 
 			//update usedCount voucher
 			if err = voucherModel.IncreaseUsedCount(voucher.ID); err != nil {
 				db.Rollback()
-				return response.ResponseError(ctx, "operation failed(20155)")
+				return utils.ResponseError(ctx, "operation failed(20155)")
 			}
 			db.Commit()
 		} else {
 			log.Error("Get voucher used by userID", zap.Error(err))
-			return response.ResponseError(ctx, "operation failed(20156)")
+			return utils.ResponseError(ctx, "operation failed(20156)")
 		}
 	}
 

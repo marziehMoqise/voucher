@@ -1,4 +1,4 @@
-package response
+package utils
 
 import (
 	"github.com/go-playground/validator/v10"
@@ -10,7 +10,7 @@ func init() {
 	validate = validator.New()
 }
 
-func Struct(s interface{}) (string, error) {
+func ValidateStruct(s interface{}) (string, error) {
 	err := validate.Struct(s)
 	if err != nil {
 		customError := err.(validator.ValidationErrors)

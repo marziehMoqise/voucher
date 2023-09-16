@@ -1,20 +1,25 @@
 package transactionSchema
 
 import (
-	validate "apiGolang/services"
+	"apiGolang/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
-func (req *ListRequest) Validate(ctx *fiber.Ctx) (int, error) {
-	errMsg, err := validate.Struct(req)
+func (req *ListRequest) Validate(ctx *fiber.Ctx) (string, error) {
+	errMsg, err := utils.ValidateStruct(req)
 	if err != nil {
 		switch errMsg {
-		case "mobile,required":
-			return 400, err
-		case "mobile,max":
-			return 400, err
+		case "Mobile,required":
+			return "The mobile field is required.", err
+		case "Mobile,max":
+			return "The mobile field must not be greater than 20 characters.", err
 		}
 	}
 
-	return 200, nil
+	isValid, mobile := utils.MobileValidate(req.Mobile)
+	if isValid {
+		req.Mobile = mobile
+	}
+
+	return "", nil
 }

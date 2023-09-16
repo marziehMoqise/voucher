@@ -5,7 +5,7 @@ import (
 	userModel "apiGolang/models/user"
 	voucherModel "apiGolang/models/voucher"
 	"apiGolang/models/voucherUsed"
-	response "apiGolang/services"
+	"apiGolang/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"go.uber.org/zap"
@@ -16,16 +16,21 @@ func List(ctx *fiber.Ctx) error {
 	req := new(voucherUsedSchema.ListRequest)
 	ctx.BodyParser(req)
 
+	errCode, err := req.Validate(ctx)
+	if err != nil {
+		return utils.ResponseError(ctx, errCode)
+	}
+
 	var userID, voucherID int64
 	if req.Mobile != "" {
 		user, err := userModel.GetByMobile(req.Mobile)
 		if err != nil {
 			if err != gorm.ErrRecordNotFound {
-				return response.ResponseError(ctx, "user not found")
+				return utils.ResponseError(ctx, "user not found")
 			}
 
 			log.Error("Get user by mobile", zap.Error(err))
-			return response.ResponseError(ctx, "operation failed(20170)")
+			return utils.ResponseError(ctx, "operation failed(20170)")
 		}
 		userID = user.ID
 	}
@@ -34,11 +39,11 @@ func List(ctx *fiber.Ctx) error {
 		voucher, err := voucherModel.GetVoucherByCode(req.VoucherCode, "gift")
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
-				return response.ResponseError(ctx, "voucherCode not found")
+				return utils.ResponseError(ctx, "voucherCode not found")
 			}
 
 			log.Error("Get voucher by voucherCode", zap.Error(err))
-			return response.ResponseError(ctx, "operation failed(20171)")
+			return utils.ResponseError(ctx, "operation failed(20171)")
 		}
 		voucherID = voucher.ID
 	}
@@ -46,7 +51,7 @@ func List(ctx *fiber.Ctx) error {
 	vouchersUsed, err := voucherUsed.List(userID, voucherID)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Error("Get list of voucher used", zap.Error(err))
-		return response.ResponseError(ctx, "operation failed(20172)")
+		return utils.ResponseError(ctx, "operation failed(20172)")
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
