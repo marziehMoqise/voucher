@@ -3,6 +3,7 @@ package main
 import (
 	"apiGolang/controllers/transaction"
 	"apiGolang/controllers/user"
+	"apiGolang/controllers/voucher"
 	"apiGolang/controllers/voucherUsed"
 	"apiGolang/database"
 	"apiGolang/database/migrations"
@@ -22,6 +23,7 @@ func main() {
 	app := fiber.New()
 	app.Use(logger.New())
 
+	app.Post("/voucher/set", voucher.Set)
 	app.Post("/user/gift", user.Gift)
 	app.Post("/transactions", transaction.List)
 	app.Post("/vouchersUsed", voucherUsed.List)

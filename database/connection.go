@@ -1,6 +1,7 @@
 package database
 
 import (
+	mysqlDriver "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"os"
@@ -43,4 +44,11 @@ func GetConnection() *gorm.DB {
 		setConnectionClient()
 	}
 	return connection
+}
+
+func IsDuplicateKeyErr(err error) bool {
+	if e, ok := err.(*mysqlDriver.MySQLError); ok {
+		return e.Number == 1062
+	}
+	return false
 }

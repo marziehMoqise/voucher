@@ -5,8 +5,8 @@ func (VouchersUsed) TableName() string {
 }
 
 type VouchersUsed struct {
-	ID        int32 `gorm:"primaryKey"`
-	UserID    int32 `gorm:"column:UserID;not null; index"`
-	VoucherID int32 `gorm:"column:voucherID;not null; index"`
-	Time      int32 `gorm:"not null"`
+	ID        int64 `gorm:"primaryKey"`
+	UserID    int64 `gorm:"column:UserID;not null; index"`
+	VoucherID int64 `gorm:"column:voucherID;not null; index"`
+	Time      int64 `gorm:"not null"`
 }
