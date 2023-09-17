@@ -13,7 +13,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"mobile\": \"+989155099397\",\n    \"voucherCode\": \"88888\"\n}",
+					"raw": "{\n    \"mobile\": \"\",\n    \"voucherCode\": \"\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -45,7 +45,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"mobile\": \"+989155099397\"\n}",
+					"raw": "{\n    \"mobile\": \"\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -76,7 +76,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"mobile\": \"+989155099390\",\n    \"voucherCode\": \"\"\n}",
+					"raw": "{\n    \"mobile\": \"\",\n    \"voucherCode\": \"\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -95,6 +95,70 @@
 					"port": "7575",
 					"path": [
 						"vouchersUsed"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:7575/voucher/set",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"voucherCode\": \"\",\n    \"giftAmount\": 10000000,\n    \"reusability\": 1000\n\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:7575/voucher/set",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "7575",
+					"path": [
+						"voucher",
+						"set"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:7575/user/getBalance",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"mobile\": \"\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:7575/user/getBalance",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "7575",
+					"path": [
+						"user",
+						"getBalance"
 					]
 				}
 			},

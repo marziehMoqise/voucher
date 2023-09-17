@@ -25,6 +25,7 @@ func main() {
 
 	app.Post("/voucher/set", voucher.Set)
 	app.Post("/user/gift", user.Gift)
+	app.Post("/user/getBalance", user.GetBalance)
 	app.Post("/transactions", transaction.List)
 	app.Post("/vouchersUsed", voucherUsed.List)
 

@@ -1,8 +1,7 @@
-package transaction
+package user
 
 import (
-	"apiGolang/apiSchema/transactionSchema"
-	"apiGolang/models/transaction"
+	"apiGolang/apiSchema/userSchema"
 	userModel "apiGolang/models/user"
 	"apiGolang/utils"
 	"errors"
@@ -12,9 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func List(ctx *fiber.Ctx) error {
-
-	req := new(transactionSchema.ListRequest)
+func GetBalance(ctx *fiber.Ctx) error {
+	req := new(userSchema.BalanceRequest)
 	ctx.BodyParser(req)
 
 	errCode, err := req.Validate(ctx)
@@ -29,19 +27,13 @@ func List(ctx *fiber.Ctx) error {
 		}
 
 		log.Error("Get user by mobile", zap.Error(err))
-		return utils.ResponseError(ctx, "operation failed(20160)")
-	}
-
-	transactions, err := transaction.GetByUserID(user.ID)
-	if err != nil && err != gorm.ErrRecordNotFound {
-		log.Error("Get transaction by userID", zap.Error(err))
-		return utils.ResponseError(ctx, "operation failed(20161)")
+		return utils.ResponseError(ctx, "operation failed(20180)")
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
 		"data": fiber.Map{
-			"transactions": transactions,
+			"balance": user.Balance,
 		},
 	})
 }

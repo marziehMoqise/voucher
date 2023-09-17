@@ -1,7 +1,7 @@
 package voucherUsed
 
 import (
-	voucherUsedSchema "apiGolang/apiSchema/voucherUsed"
+	voucherUsedSchema "apiGolang/apiSchema/voucherUsedSchema"
 	"apiGolang/database"
 	voucherUsedDataModel "apiGolang/models/voucherUsed/dataModel"
 	"gorm.io/gorm"

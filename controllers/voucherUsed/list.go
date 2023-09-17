@@ -1,11 +1,12 @@
 package voucherUsed
 
 import (
-	voucherUsedSchema "apiGolang/apiSchema/voucherUsed"
+	voucherUsedSchema "apiGolang/apiSchema/voucherUsedSchema"
 	userModel "apiGolang/models/user"
 	voucherModel "apiGolang/models/voucher"
 	"apiGolang/models/voucherUsed"
 	"apiGolang/utils"
+	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"go.uber.org/zap"
@@ -25,7 +26,7 @@ func List(ctx *fiber.Ctx) error {
 	if req.Mobile != "" {
 		user, err := userModel.GetByMobile(req.Mobile)
 		if err != nil {
-			if err != gorm.ErrRecordNotFound {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return utils.ResponseError(ctx, "user not found")
 			}
 

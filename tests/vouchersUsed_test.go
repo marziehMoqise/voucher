@@ -1,7 +1,7 @@
 package tests
 
 import (
-	voucherUsedSchema "apiGolang/apiSchema/voucherUsed"
+	voucherUsedSchema "apiGolang/apiSchema/voucherUsedSchema"
 	"testing"
 )
 
