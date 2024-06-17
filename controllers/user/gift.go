@@ -5,7 +5,9 @@ import (
 	"apiGolang/database"
 	"apiGolang/models/transaction"
 	userModel "apiGolang/models/user"
+	"apiGolang/models/user/dataModel"
 	voucherModel "apiGolang/models/voucher"
+	voucherDataModel "apiGolang/models/voucher/dataModel"
 	"apiGolang/models/voucherUsed"
 	"apiGolang/utils"
 	"errors"
@@ -15,80 +17,103 @@ import (
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 func Gift(ctx *fiber.Ctx) error {
-
+	var (
+		wg sync.WaitGroup
+	)
 	db := database.GetConnection()
 
 	req := new(userSchema.GiftRequest)
-	ctx.BodyParser(req)
-
-	errCode, err := req.Validate(ctx)
-	if err != nil {
-		return utils.ResponseError(ctx, errCode)
+	if err := ctx.BodyParser(req); err != nil {
+		return utils.ResponseErrors(ctx, fiber.StatusBadRequest, "Invalid request body")
 	}
 
-	user, err := userModel.FirstOrCreateUserByMobile(req.Mobile)
+	errMsg, err := req.Validate(ctx)
 	if err != nil {
-		log.Error("FirstOrCreate user by mobile", zap.Error(err))
-		return utils.ResponseError(ctx, "operation failed(20150)")
+		return utils.ResponseErrors(ctx, fiber.StatusBadRequest, errMsg)
 	}
 
-	//getVoucherByCode
-	voucher, err := voucherModel.GetVoucherByCode(req.VoucherCode, "gift")
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.ResponseError(ctx, "voucherCode not found")
+	wg.Add(2)
+
+	var user dataModel.User
+	var voucher voucherDataModel.Voucher
+	var fetchErr error
+
+	go func() {
+		defer wg.Done()
+		userData, err := userModel.FirstOrCreateUserByMobile(req.Mobile)
+		if err != nil {
+			fetchErr = err
+			log.Error("Failed to fetch or create user", zap.Error(err))
 		}
-		log.Error("Get voucher by code", zap.Error(err))
-		return utils.ResponseError(ctx, "operation failed(20151)")
+		user = userData
+	}()
+
+	go func() {
+		defer wg.Done()
+		voucherData, err := voucherModel.GetVoucherByCode(req.VoucherCode, "gift")
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				fetchErr = errors.New("voucherCode not found")
+			} else {
+				fetchErr = err
+				log.Error("Failed to fetch voucher", zap.Error(err))
+			}
+		}
+		voucher = voucherData
+	}()
+
+	wg.Wait()
+
+	if fetchErr != nil {
+		return utils.ResponseErrors(ctx, fiber.StatusInternalServerError, fetchErr.Error())
 	}
 
-	//usedVoucherByUser
 	result, err := voucherUsed.GetVoucherUsedByUserID(voucher.ID, user.ID)
+	//if err != nil {
+	//	log.Error("Failed to get voucher used by user", zap.Error(err))
+	//	return utils.ResponseErrors(ctx, fiber.StatusInternalServerError, "operation failed(20156)")
+	//}
 	if result.RowsAffected > 0 {
-		return utils.ResponseError(ctx, "You have already used this voucher code")
+		return utils.ResponseErrors(ctx, fiber.StatusConflict, "You have already used this voucher code")
 	}
 
-	//check voucherCode exceeded
 	if voucher.UsedCount == voucher.Reusability {
-		return utils.ResponseError(ctx, "voucherCode has been exceeded")
+		return utils.ResponseErrors(ctx, fiber.StatusConflict, "voucherCode has been exceeded")
 	}
 
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			db = db.Begin()
-
-			//insertTransaction
-			if err = transaction.Insert(user.ID, voucher.GiftAmount, "increase", "افزایش موجودی کیف پول از طریق هدیه"); err != nil {
-				db.Rollback()
-				return utils.ResponseError(ctx, "operation failed(20152)")
-			}
-
-			//updateUserBalance
-			if err = userModel.UpdateUserBalance(user.ID, voucher.GiftAmount); err != nil {
-				db.Rollback()
-				return utils.ResponseError(ctx, "operation failed(20153)")
-			}
-
-			//insert voucherUsed
-			if err = voucherUsed.Insert(user.ID, voucher.ID); err != nil {
-				db.Rollback()
-				return utils.ResponseError(ctx, "operation failed(20154)")
-			}
-
-			//update usedCount voucher
-			if err = voucherModel.IncreaseUsedCount(voucher.ID); err != nil {
-				db.Rollback()
-				return utils.ResponseError(ctx, "operation failed(20155)")
-			}
-			db.Commit()
-		} else {
-			log.Error("Get voucher used by userID", zap.Error(err))
-			return utils.ResponseError(ctx, "operation failed(20156)")
+	db = db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			db.Rollback()
+			log.Error("Transaction failed", zap.Any("recover", r))
 		}
+	}()
+
+	if err = transaction.Insert(user.ID, voucher.GiftAmount, "increase", "افزایش موجودی کیف پول از طریق هدیه"); err != nil {
+		db.Rollback()
+		return utils.ResponseErrors(ctx, fiber.StatusInternalServerError, "operation failed(20152)")
 	}
+
+	if err = userModel.UpdateUserBalance(user.ID, voucher.GiftAmount); err != nil {
+		db.Rollback()
+		return utils.ResponseErrors(ctx, fiber.StatusInternalServerError, "operation failed(20153)")
+	}
+
+	if err = voucherUsed.Insert(user.ID, voucher.ID); err != nil {
+		db.Rollback()
+		return utils.ResponseErrors(ctx, fiber.StatusInternalServerError, "operation failed(20154)")
+	}
+
+	if err = voucherModel.IncreaseUsedCount(voucher.ID); err != nil {
+		db.Rollback()
+		return utils.ResponseErrors(ctx, fiber.StatusInternalServerError, "operation failed(20155)")
+	}
+
+	db.Commit()
 
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
